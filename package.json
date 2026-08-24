@@ -1,0 +1,15 @@
+{
+  "name": "telegram-shop-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "grammy": "^1.30.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  },
+  "scripts": {
+    "deploy": "wrangler deploy"
+  }
+}
