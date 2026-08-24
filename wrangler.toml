@@ -1,0 +1,21 @@
+name = "telegram-shop-bot"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+# متغیرهای محیطی (از گیتهاب سکرتز خوانده می‌شوند)
+[vars]
+BOT_TOKEN = "${{ secrets.BOT_TOKEN }}"
+ADMIN_ID = "${{ secrets.ADMIN_ID }}"
+CHANNEL_ID = "${{ secrets.CHANNEL_ID }}"
+CARD_NUMBER = "${{ secrets.CARD_NUMBER }}"
+
+# اتصال دیتابیس D1 (باید آیدی واقعی را در سکرتز گیتهاب بگذارید)
+[[d1_databases]]
+binding = "DB"
+database_name = "shop_db"
+database_id = "${{ secrets.D1_DATABASE_ID }}"
+
+# اتصال فضای KV
+[[kv_namespaces]]
+binding = "KV"
+id = "${{ secrets.KV_NAMESPACE_ID }}"
