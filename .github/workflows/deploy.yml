@@ -25,5 +25,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # در این خط، متغیرها مستقیماً از سکرتز خوانده شده و به کلودفلر تزریق می‌شوند
-          command: deploy --var BOT_TOKEN:${{ secrets.BOT_TOKEN }} --var ADMIN_ID:${{ secrets.ADMIN_ID }} --var CHANNEL_ID:${{ secrets.CHANNEL_ID }} --var CARD_NUMBER:${{ secrets.CARD_NUMBER }}
+          command: deploy
