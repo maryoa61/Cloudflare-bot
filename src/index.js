@@ -9,13 +9,11 @@ export default {
       if (!ctx.from) return next();
       const userId = ctx.from.id;
       
-      // ذخیره کاربر در دیتابیس
       const userExists = await env.DB.prepare("SELECT user_id FROM users WHERE user_id = ?").bind(userId).first();
       if (!userExists) {
         await env.DB.prepare("INSERT INTO users (user_id, username) VALUES (?, ?)").bind(userId, ctx.from.username || "None").run();
       }
 
-      // بررسی عضویت در کانال
       try {
         const member = await bot.api.getChatMember(env.CHANNEL_ID, userId);
         if (member.status === "left" || member.status === "kicked") {
@@ -31,14 +29,13 @@ export default {
     // --- دستور /start ---
     bot.command("start", async (ctx) => {
       const keyboard = new InlineKeyboard()
-        .text("🛒 فروشگاه", "shop")
-        .text("👤 پنل مدیریت", "admin");
+        .text("🛒 فروشگاه", "shop");
       
       if (ctx.from.id.toString() === env.ADMIN_ID) {
-        await ctx.reply("به ربات فروشگاهی خوش آمدید!", { reply_markup: keyboard });
-      } else {
-        await ctx.reply("به ربات فروشگاهی خوش آمدید!\nبرای خرید روی دکمه زیر بزنید.", { reply_markup: new InlineKeyboard().text("🛒 فروشگاه", "shop") });
+        keyboard.text("👤 پنل مدیریت", "admin");
       }
+      
+      await ctx.reply("به ربات فروشگاهی خوش آمدید!", { reply_markup: keyboard });
     });
 
     // --- بخش فروشگاه ---
@@ -77,22 +74,21 @@ export default {
       const productId = ctx.match[1];
       const product = await env.DB.prepare("SELECT * FROM products WHERE id = ?").bind(productId).first();
       
-      // Stars تلگرام قیمت را به عنوان عدد صحیح می‌گیرد (1 Star = 1)
-      const starsPrice = Math.floor(product.price / 10000); // مثال: هر 10000 تومان = 1 استار
+      const starsPrice = Math.floor(product.price / 10000);
       
       await ctx.answerCallbackQuery("در حال ساخت فاکتور...");
       await bot.api.sendInvoice(ctx.from.id, {
         title: product.name,
         description: product.description,
         payload: `product_${product.id}`,
-        currency: "XTR", // کد ارز برای Stars
+        currency: "XTR",
         prices: [{ label: product.name, amount: starsPrice }],
       });
     });
 
-    // --- پیش‌فاکتور استارز (Precheckout) ---
+    // --- پیش‌فاکتور استارز ---
     bot.on("pre_checkout_query", async (ctx) => {
-      await ctx.answerPreCheckoutQuery(true); // تایید خودکار فاکتور
+      await ctx.answerPreCheckoutQuery(true);
     });
 
     // --- پرداخت موفق استارز ---
@@ -117,7 +113,6 @@ export default {
       await ctx.editMessageText(`برای پرداخت کارت به کارت، مبلغ ${product.price} تومان را به شماره کارت زیر واریز کنید:\n\n💳 ${env.CARD_NUMBER}\n\nسپس عکس فیش را همینجا ارسال کنید.\nکد پیگیری شما: ${order.meta.last_row_id}`);
       await ctx.answerCallbackQuery();
       
-      // ذخیره وضعیت کاربر برای دریافت عکس فیش
       await env.KV.put(`user_state_${ctx.from.id}`, `receipt_${order.meta.last_row_id}`);
     });
 
@@ -129,7 +124,6 @@ export default {
       const orderId = state.replace("receipt_", "");
       const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
       
-      // ارسال فیش به ادمین
       const keyboard = new InlineKeyboard()
         .text("✅ تایید", `approve_${orderId}`)
         .text("❌ رد", `reject_${orderId}`);
@@ -180,14 +174,15 @@ export default {
       await ctx.reply(`✅ محصول ${name} با قیمت ${price} تومان اضافه شد.`);
     });
 
-    // راه‌اندازی Webhook
+    // راه‌اندازی Webhook (اصلاح شده برای جلوگیری از خطای شبکه)
     const url = new URL(request.url);
     if (url.pathname === "/webhook") {
       try {
-        return await bot.handleUpdate(await request.json());
+        await bot.handleUpdate(await request.json());
       } catch (e) {
-        console.error(e);
+        console.error("Error:", e);
       }
+      return new Response("OK", { status: 200 }); // پاسخ صحیح به تلگرام
     }
     return new Response("Bot is running...");
   }
